@@ -1,0 +1,6 @@
+#output file
+*.o
+szbtool
+
+#tmp dir/file
+tmp*
