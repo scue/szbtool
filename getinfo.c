@@ -1,11 +1,30 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  getinfo.c
+ *
+ *    Description:  
+ *
+ *        Version:  1.0
+ *        Created:  Tuesday, July 16, 2013 02:41:18 HKT
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  linkscue (scue), 
+ *   Organization: 
+ *
+ * =====================================================================================
+ */
 #include	"stdlib.h"
 #include	"stdio.h"
 #include	"string.h"
 #include	"unistd.h"
 #include	"fcntl.h"
 #include    "time.h"
-#include    "szb.h"
 
+#include    "szb.h"
+#include    "libfile.h"
+#include    "libget.h"
 
 /*获取文件长度*/
 long getSize( FILE *fp )
@@ -59,7 +78,6 @@ unsigned int getSum(FILE *fp)
         fscanf(fp,"%4c",&tmp);
         sum+=tmp;
     }
-//    printf("sum = 0x%08x\n",sum);
     return sum;                                 /* 这里的检验和的值是正确的 */
 }
 
@@ -90,14 +108,7 @@ void get_szb_info(char *file){
     char str[80];
     lt=times;
     ptr=localtime(&lt);
-    strftime(str,100,"%F%X",ptr);
-//    struct tm *ptr;                             /* 定义一个tm结构体指针 */
-//    time_t repartTime;                          /* 定义一个time_t 结构体 */
-//    char string_time[80];                       /* 定义输出时的字符串 */
-//    repartTime=info.timestamp;                  /* 把获取到的时间传递给timt_t结构体 */
-//    ptr=localtime(&repartTime);                 /* 转换日期并提交给ptr指针 */
-//    strncpy(string_time,"",sizeof(string_time)); /* 清空原有变量内的信息 */
-//    strftime(string_time,100,"%F %x",&ptr);     /* 转换日期时间格式 */
+    strftime(str,100,"%F %X",ptr);
     printf ( "\n" );
     printf ( "Header:\n" );
     printf ( "Checksum:\t0x%08x\n",info.checksum );
@@ -136,7 +147,7 @@ void author_info(){
     printf ( "===============================================================\n" );
     printf ( "          Welcome to use Lenovo K860/K860i szbtool!    \n" );
     printf ( "\n" );
-    printf ( "                                    -- version: 0.15       \n" );
+    printf ( "                                    -- version: 0.18       \n" );
     printf ( "                                    -- author:  linkscue   \n" );
     printf ( "===============================================================\n" );
 }

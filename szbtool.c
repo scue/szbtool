@@ -26,10 +26,10 @@
 #include    "libfile.h"
 #include    "libget.h"
 
-extern char *optarg;    //选项的参数指针
-extern int optind;      //下一次调用getopt的时，从optind存储的位置处重新开始检查选项;
-extern int opterr;      //当opterr=0时，getopt不向stderr输出错误信息;
-extern int optopt;      //当命令行选项字符不包括在optstring中或者选项缺少必要的参数时，该选项存储在optopt中，getopt返回?
+extern char *optarg;
+extern int optind;
+extern int opterr;
+extern int optopt;
 
 
 /*主函数*/
@@ -103,7 +103,7 @@ int main ( int argc, char *argv[] )
 
     //开始获取选项信息
     opterr=0;                                   /* 不显示错误的选项信息 */
-    while ((opt = getopt(argc, argv, "b:k:r:s:c:p:d:x:i:v:a:e")) != -1)
+    while ( ((opt = getopt(argc, argv, "b:k:r:s:c:p:d:x:i:v:a:e")) != -1) && (opt != 255) )
       switch (opt) {
       case 'v':
             strncpy(version,optarg,sizeof(version));
@@ -219,7 +219,8 @@ int main ( int argc, char *argv[] )
     head.filesize=getSize(fp);                          /* get szb file size */
     strncpy(head.author,author,sizeof(head.author));    /* 写入作者信息 */
     strncpy(head.version,version,sizeof(head.version)); /* 写入版本信息 */
-    time(&head.timestamp);                              /* 写入时间信息 */
+    long local_time = (long)head.timestamp;
+    time(&local_time);                              /* 写入时间信息 */
     head.imagecount=(index-1);                              /* 写入镜像数目 */
     strncpy(head.tools,"",sizeof(head.tools));          /* 工具信息为空 */
     strncpy(head.reserve,"",sizeof(head.reserve));      /* 尾部空闲部分 */

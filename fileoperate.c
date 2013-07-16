@@ -1,10 +1,30 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  fileoperate.c
+ *
+ *    Description:  
+ *
+ *        Version:  1.0
+ *        Created:  Tuesday, July 16, 2013 02:40:56 HKT
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  linkscue (scue), 
+ *   Organization: 
+ *
+ * =====================================================================================
+ */
 #include	"stdlib.h"
 #include	"stdio.h"
 #include	"string.h"
 #include	"unistd.h"
 #include	"fcntl.h"
 #include    "time.h"
+
 #include    "szb.h"
+#include    "libget.h"
+#include    "libfile.h"
 
 //分解文件函数；
 void splitFile(char *file){
@@ -64,30 +84,6 @@ void splitFile(char *file){
     printf("Extract szb file done!\n");
 }
 
-////在尾部追加二进制文件(for Windows)
-//void appendFile(char *fp, char *body) { 
-//    int n=0;
-//    FILE *in,*out;
-//    int size=0;
-//    if ( (in = fopen(fp, "rb")) == NULL){
-//        printf ( "Open in file failure!\n" );
-//        exit(1);
-//    }
-//    size=getSize(in);
-//    u8 buffer[size];
-//    sleep(0.2);
-//    if ( (out=fopen(body ,"ab")) == NULL ){
-//        printf ( "Open out file failure!\n" );
-//        exit(1);
-//    }
-//    while (!feof(in)) {
-//        n = fread(buffer, 1, size, in);
-//        fwrite(buffer, 1, n, out);
-//    }
-//    fclose(in);
-//    fclose(out);
-//}
-
 //在尾部追加二进制文件
 void appendFile(char *fp, char *body) { 
     int n=0;
@@ -112,47 +108,33 @@ void appendFile(char *fp, char *body) {
 //u32 repartImage(char *file, char *filename,char *partname,u32 offset)
 u32 appendImage(char *szb, char *file, char *filename, char *partname, u32 offset, int index){
     FILE *fp,*fb;
-    if((fp=fopen(file,"rb")) == NULL){
+    if((fp=fopen(file,"rb+")) == NULL){
         printf ( "Open %s failure!\n",filename );
         exit(1);
     }
+    /* appendZeros */
+    unsigned int origin_size = getSize(fp);
+    unsigned int append_size = 1024 - (origin_size%1024);
+    appendZeros(fp, append_size);
     szb_images_t image;
     strncpy(image.filename, filename, sizeof(image.filename));
     strncpy(image.partname, partname, sizeof(image.partname));
     strncpy(image.reserve, "", sizeof(image.reserve));
-    time(&image.timestamp);
+    long local_time = (long)image.timestamp;
+    time(&local_time);
     image.imageoffset=offset;
     image.imagesize=getSize(fp);
     image.checksum=getSum(fp);
     image.eraseflag=1;
     image.writeflag=1;
     fclose(fp);
-//    u8 buffer[INFOSIZE];
-//    strncpy(buffer, &image, sizeof(buffer));
     printf("Adding: %-12sOffset: 0x%08x Checksum: 0x%08x\n",image.partname, image.imageoffset, image.checksum);
     if ( (fb=fopen(szb, "rb+")) == NULL) {
         printf(" append %s to szb file, open szb file failure!\n", file);
         exit(1);
     }
     fseek( fb, ( index * INFOSIZE ), SEEK_SET );     /* 移动文件指针的位置 */
-//    fscanf(fd,"%64c",&images[i].filename);      /* 获取得文件名称 */
-//    fscanf(fd,"%32c",&images[i].partname);
-//    fscanf(fd,"%4c",&images[i].checksum);
-//    fscanf(fd,"%4c",&images[i].timestamp);
-//    fscanf(fd,"%4c",&images[i].imageoffset);    /* 获取偏移位置 */
-//    fscanf(fd,"%4c",&images[i].imagesize);      /* 获取镜像文件的大小 */
-//    fscanf(fd,"%4c",&images[i].eraseflag);
-//    fscanf(fd,"%4c",&images[i].writeflag);
-//    fscanf(fd,"%136c",&images[i].reserve);
-    fwrite(&image.filename, sizeof(image.filename), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.partname, sizeof(image.partname), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.checksum, sizeof(image.checksum), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.timestamp, sizeof(image.timestamp), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.imageoffset, sizeof(image.imageoffset), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.imagesize, sizeof(image.imagesize), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.eraseflag, sizeof(image.eraseflag), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.writeflag, sizeof(image.writeflag), 1, fb);           /* 向szb文件写入Image的相关信息 */
-    fwrite(&image.reserve, sizeof(image.reserve), 1, fb);           /* 向szb文件写入Image的相关信息 */
+    fwrite(&image,sizeof(image),1, fb);
     fclose(fb);                                   /* 向szb文件写完Image信息后关闭 */
 //    printf("appending %s to %s\n",file, szb);
     appendFile(file, szb);                        /* 向szb文件的尾部添加image数据 */
@@ -180,21 +162,22 @@ u32 appendImage(char *szb, char *file, char *filename, char *partname, u32 offse
 //}
 
 //在尾部补零
-//void appendZeros(char *file, int size){
+void appendZeros(FILE *fd, unsigned int size){
 //    FILE *fd;
-//    unsigned int buffer[size];
-//    strncpy(buffer,"",sizeof(buffer));
+    unsigned int buffer[size];
+    memset(buffer, 0x00, sizeof(buffer));
 //    if ( ( fd=fopen(file,"ab+") ) == NULL ){
 //        printf ( "Append zeros failure, can't open target file!\n" );
 //        exit(1);
 //    }
-//
-//    if ( size != 0 ){
-//        fwrite(buffer, 1 , size , fd);
-////        printf ( "补零数目：\t%d\n", size);
-//    }
+
+    if ( size != 0 ){
+        fseek( fd, 0, SEEK_END);
+        fwrite(buffer, 1 , size , fd);
+        printf ( "补零数目：\t%d\n", size);
+    }
 //    fclose(fd);
-//}
+}
 
 
 
